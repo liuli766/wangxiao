@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: {{ include "cswx-pc.namespace" . }}
+  name: {{ include "cswx-pc.fullname" . }}
+  labels:
+    {{- include "cswx-pc.labels" . | nindent 4 }}
+  annotations:
+    k8s.eip.work/displayName: cswx-pc
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "cswx-pc.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "cswx-pc.selectorLabels" . | nindent 8 }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "cswx-pc.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      volumes:
+        - name: log
+          persistentVolumeClaim:
+            claimName: logs
+        - name: config
+          persistentVolumeClaim:
+            claimName: config
+        - configMap:
+            defaultMode: 420
+            items:
+              - key: config
+                path: nginx.conf
+            name: nginx-config
+          name: nginx-config
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: daily
+              value: "{{ date "20060102150405" .Release.Time }}"
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          livenessProbe:
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            httpGet:
+              path: {{.Values.livenessProbePath}}
+              port: {{.Values.appPort}}
+          readinessProbe:
+            initialDelaySeconds: 5
+            httpGet:
+              path: {{.Values.readinessProbePath}}
+              port: {{.Values.appPort}}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - mountPath: /var/log/
+              mountPropagation: HostToContainer
+              name: log
+              readOnly: false
+              subPath: ./cswx/pc
+            - mountPath: /home/data
+              mountPropagation: None
+              name: config
+              subPath: ./cswx/pc/config
+            - mountPath: /etc/nginx/nginx.conf
+              mountPropagation: None
+              name: nginx-config
+              subPath: nginx.conf
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

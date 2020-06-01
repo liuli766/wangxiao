@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: {{ include "cswx-pc.namespace" . }}
+  name: {{ include "cswx-pc.fullname" . }}
+  labels:
+    {{- include "cswx-pc.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.appPort }}
+      protocol: TCP
+      name: {{ .Values.service.name }}
+  selector:
+    {{- include "cswx-pc.selectorLabels" . | nindent 4 }}

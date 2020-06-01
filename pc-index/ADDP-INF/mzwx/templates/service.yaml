@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: {{ include "mzwx-pc.namespace" . }}
+  name: {{ include "mzwx-pc.fullname" . }}
+  labels:
+    {{- include "mzwx-pc.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.appPort }}
+      protocol: TCP
+      name: {{ .Values.service.name }}
+  selector:
+    {{- include "mzwx-pc.selectorLabels" . | nindent 4 }}

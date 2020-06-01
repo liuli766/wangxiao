@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "mzwx-pc.fullname" . }}-test-connection"
+  labels:
+{{ include "mzwx-pc.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test-success
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args:  ['{{ include "mzwx-pc.fullname" . }}:{{ .Values.service.port }}']
+  restartPolicy: Never
