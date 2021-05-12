@@ -16,7 +16,7 @@
         "eslint-plugin-html": "^6.0.0",
         "js-md5": "^0.7.3",
         "qrcodejs2": "0.0.2",
-        "swiper": "^5.3.6",
+        "swiper": "^6.5.1",
         "vue": "^2.6.10",
         "vue-class-component": "^7.0.2",
         "vue-cookies": "^1.6.1",
